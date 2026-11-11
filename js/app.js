@@ -4456,7 +4456,7 @@
       const closeTitle = this.locale === 'en' ? 'Dismiss event callout' : '关闭此事件浮签';
       this.milestoneBalloon.innerHTML =
         `<div class="ep-head"><span class="ep-year">${yrText} · ${eraLabel}</span>${placeHtml}${relicHtml}${storyHtml}<button type="button" class="ep-close" title="${closeTitle}" aria-label="${closeTitle}">×</button></div>` +
-        `<div class="ep-text">${headlineText}</div>`;
+        `<div class="ep-text">${this._linkPersonNamesInText(headlineText, this._eventPersonKeys(m))}</div>`;
       const isMobile = typeof window !== 'undefined' && window.innerWidth <= 900;
       const maxW = isMobile ? Math.min(268, (window.innerWidth || 390) - 20) : 348;
       const headW =
@@ -4473,6 +4473,9 @@
       const textLines = Math.max(1, Math.ceil(textW / Math.max(120, estW - 22)));
       const estH = Math.round(16 + headLines * (isMobile ? 22 : 20) + textLines * 17.5);
       this._milestoneBalloonSize = { w: estW, h: estH };
+      if (typeof this._bindPersonNameLinks === 'function') {
+        this._bindPersonNameLinks(this.milestoneBalloon);
+      }
       const placeBtns =
         typeof this.milestoneBalloon.querySelectorAll === 'function'
           ? Array.from(this.milestoneBalloon.querySelectorAll('.ep-place'))
@@ -5358,6 +5361,20 @@
         if (rulers) {
           html += `<div class="polity-row"><span class="seat-tag">${en ? 'Rulers' : this._zh('帝系')}</span><span class="polity-rulers">${esc(rulers)}</span></div>`;
         }
+        const figures =
+          typeof this._polityFigureProfiles === 'function' ? this._polityFigureProfiles(desc) : [];
+        if (figures.length) {
+          const chips = figures
+            .map((p) => {
+              const label = en ? p.en || p.zh : this._zh(p.zh);
+              const tip = en
+                ? p.courtesyEn || 'Open person chronicle'
+                : p.courtesyZh || '点击查看此人生平';
+              return `<button type="button" class="polity-figure-chip" data-person-key="${esc(p.key)}" title="${esc(tip)}">${esc(label)}</button>`;
+            })
+            .join('');
+          html += `<div class="polity-row polity-figures-row"><span class="seat-tag">${en ? 'Figures' : this._zh('人物')}</span><span class="polity-figures">${chips}</span></div>`;
+        }
         if (stages.length) {
           const chips = stages
             .map(
@@ -5387,6 +5404,16 @@
               if (s) this._zoomToPolity(st.title, s);
             });
           });
+          extra.querySelectorAll('.polity-figure-chip').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const key = btn.dataset.personKey;
+              if (!key) return;
+              this.stopAutoplay();
+              if (window.innerWidth <= 900 && this.mobileChronicleOpen) this.toggleMobileChronicle(false);
+              this.openPersonChronicle(key, -1);
+            });
+          });
         }
       }
       this._polityStagesCache = stages;
@@ -5405,7 +5432,15 @@
             : en
               ? ev.landmark.en || ev.landmark.zh
               : this._zh(ev.landmark.zh);
-          li.innerHTML = `<span class="ev-yr">${yrLabel}</span><span>${text}</span>`;
+          const personKeys = this._eventPersonKeys
+            ? this._eventPersonKeys(ev.milestone || ev.landmark || ev)
+            : [];
+          const linked =
+            typeof this._linkPersonNamesInText === 'function'
+              ? this._linkPersonNamesInText(text, personKeys)
+              : text;
+          li.innerHTML = `<span class="ev-yr">${yrLabel}</span><span>${linked}</span>`;
+          if (typeof this._bindPersonNameLinks === 'function') this._bindPersonNameLinks(li);
           li.addEventListener('click', () => {
             this.stopAutoplay();
             if (window.innerWidth <= 900 && this.mobileChronicleOpen) this.toggleMobileChronicle(false);
@@ -5949,7 +5984,13 @@
         const storyBadge = storyHit
           ? `<button type="button" class="ev-seal-tag ev-story-tag" title="${this.locale === 'en' ? 'Event Storyline — click to trace the full multi-act campaign' : `大事件全脉络 · 点击展开「${storyHit.titleZh || '大事件'}」时空推演`}">${this.locale === 'en' ? 'Story' : '始末'}</button>`
           : '';
-        li.innerHTML = `<span class="ev-yr">${yrLabel}</span><span>${this.milestoneHeadline(dynasty, m)}${badge}${sealBadge}${storyBadge}</span>`;
+        const headline = this.milestoneHeadline(dynasty, m);
+        const linkedHeadline =
+          typeof this._linkPersonNamesInText === 'function'
+            ? this._linkPersonNamesInText(headline, this._eventPersonKeys(m))
+            : headline;
+        li.innerHTML = `<span class="ev-yr">${yrLabel}</span><span>${linkedHeadline}${badge}${sealBadge}${storyBadge}</span>`;
+        if (typeof this._bindPersonNameLinks === 'function') this._bindPersonNameLinks(li);
         const sealBtn = li.querySelector('.ev-seal-tag:not(.ev-story-tag)');
         if (sealBtn && relicStopIdx !== null) {
           sealBtn.addEventListener('click', (e) => {

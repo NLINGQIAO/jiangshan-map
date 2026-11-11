@@ -146,3 +146,8 @@ npm test --prefix scripts/search-pinyin
      3. **双阵营沙盘与跨朝代站点（`js/lore_detail.js`）**：在 `PERSON_EVENTS` 中定义 `"camps"`（两阵营朱/黛配色）与按时间排序的 `"stops"`；跨朝代事件需在各 `stop` 上标注 `"dynastyKey"`，疆域质变节点标注 `"isMapChange": true`；合围箭头 `"prongs"` 若发自前序已出现的站点，须标注 `"fromStopIdx"` 以复用前序站点圆珠。
      4. **拼音检索词更新**：运行 `node scripts/gen_pinyin.js` 同步 `js/event_pinyin.js`。
      5. **出处登记（`data/sources/persons.json`）**：登记 `person:<key>` 的正史或《资治通鉴》卷次出处。
+6. **人物小传、事件点名与政权人物（点人溯事）**：
+   - 短档案仍写在 `js/lore_core.js` 的 `PERSON_PROFILES`（`key` / `zh` / `en` / `courtesy*` / `dynastyKey` / `span` / `aliases` / `evCount`）。**不要**把长传、`tokens`、`stops` 放进 `lore_core.js`（首屏预算与 CI 会拦）。
+   - 匹配词与小传写在 `js/lore_detail.js` 的 `PERSON_DETAILS[key]`：`tokens` 用于从编年标题抽取行迹；`descZh` / `descEn` 为点开姓名后顶部「人物小传」（各约 40–80 字，勿摘抄史籍原文）。
+   - 编年 `milestones[].persons` 与地点大事 `PLACE_LANDMARK_EVENTS[].persons` 填人物 `key` 后，编年列表、事件浮签与点地溯源会把正文里的姓名渲成可点按钮。
+   - 政权卡的「人物」来自 `POLITY_SUMMARIES[polityKey].figures`（人物 `key` 数组，只列该政权自己的人，不要把灭国主将算进去）。无 `figures` 时，界面会从帝系/提要里的姓名做有限回退。

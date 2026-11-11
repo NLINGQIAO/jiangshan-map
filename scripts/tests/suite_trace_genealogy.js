@@ -1754,6 +1754,39 @@ async function runTraceGenealogySuite(ctx) {
         );
       }
     }
+
+    {
+      const sparseBios = [];
+      for (const p of loreData.PERSON_PROFILES) {
+        if (p.isStory || p.isRelic) continue;
+        if (!p.descZh || p.descZh.length < 24 || !p.descEn || p.descEn.length < 24) {
+          sparseBios.push(`${p.key} (${p.zh}) zh=${(p.descZh || '').length} en=${(p.descEn || '').length}`);
+        }
+        if (p.descEn && /[\u4e00-\u9fff]/.test(p.descEn)) {
+          sparseBios.push(`${p.key} descEn contains CJK`);
+        }
+      }
+      assert(sparseBios.length === 0, `Person biographies missing or too short:\n${sparseBios.join('\n')}`);
+
+      ctrl.locale = 'zh';
+      const linked = ctrl._linkPersonNamesInText('\u66f9\u64cd\u8fce\u6c49\u732e\u5e1d\u90fd\u8bb8', ['caocao']);
+      assert(
+        linked.includes('data-actor-key="caocao"') && linked.includes('\u66f9\u64cd'),
+        `Event copy must wrap tagged names as buttons, got ${linked}`
+      );
+      const wei = loreData.POLITY_PROFILES.find((p) => p.key === 'caowei');
+      const weiFigs = ctrl._polityFigureProfiles(wei).map((p) => p.key);
+      assert(
+        weiFigs.includes('caocao') && weiFigs.includes('simayi') && !weiFigs.includes('liubei'),
+        `Cao Wei figures should list Cao Cao & Sima Yi, got ${JSON.stringify(weiFigs)}`
+      );
+      const shu = loreData.POLITY_PROFILES.find((p) => p.key === 'shuhan');
+      const shuFigs = ctrl._polityFigureProfiles(shu).map((p) => p.key);
+      assert(
+        shuFigs.includes('zhugeliang') && shuFigs.includes('liubei'),
+        `Shu Han figures should list Liu Bei & Zhuge Liang, got ${JSON.stringify(shuFigs)}`
+      );
+    }
   }
 
 }

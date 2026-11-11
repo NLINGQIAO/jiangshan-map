@@ -104,6 +104,184 @@
       return (window.ATLAS_LORE_DATA && window.ATLAS_LORE_DATA.PERSON_PROFILES) || [];
     }
 
+    _personProfileByKey(key) {
+      if (!key) return null;
+      const k = String(key);
+      return HistoricalAtlasController.PERSON_PROFILES.find((p) => p && p.key === k) || null;
+    }
+
+    _personNameTerms(profile, isEn, tagged) {
+      const out = [];
+      const push = (s) => {
+        const t = String(s || '').trim();
+        if (t.length >= 2 && !out.includes(t)) out.push(t);
+      };
+      if (!profile) return out;
+      if (isEn) {
+        push(profile.en);
+        if (tagged) {
+          for (const a of profile.aliases || []) {
+            if (a && !/[一-鿿]/.test(a) && String(a).length >= 3) push(a);
+          }
+        }
+      } else {
+        push(profile.zh);
+        if (tagged) {
+          for (const a of profile.aliases || []) {
+            if (a && /[一-鿿]/.test(a) && String(a).length >= 2) push(a);
+          }
+          for (const tok of profile.tokens || []) {
+            if (tok && /[一-鿿]/.test(tok) && String(tok).length >= 2) push(tok);
+          }
+          const courtesyHead = String(profile.courtesyZh || '').split(/\s*·\s*/)[0];
+          if (courtesyHead && courtesyHead.length >= 2 && courtesyHead.length <= 8) push(courtesyHead);
+        }
+      }
+      return out.sort((a, b) => b.length - a.length);
+    }
+
+    _eventPersonKeys(ev) {
+      if (!ev) return [];
+      const raw = [];
+      if (Array.isArray(ev.persons)) raw.push(...ev.persons);
+      if (ev.milestone && Array.isArray(ev.milestone.persons)) raw.push(...ev.milestone.persons);
+      if (ev.landmark && Array.isArray(ev.landmark.persons)) raw.push(...ev.landmark.persons);
+      if (Array.isArray(ev.actors)) {
+        for (const ac of ev.actors) {
+          if (ac && ac.key) raw.push(ac.key);
+        }
+      }
+      const out = [];
+      const seen = new Set();
+      for (const k of raw) {
+        if (!k || seen.has(k)) continue;
+        seen.add(k);
+        out.push(k);
+      }
+      return out;
+    }
+
+    _collectPersonKeysForText(text, extraKeys) {
+      const keys = [];
+      const seen = new Set();
+      const add = (k) => {
+        if (!k || seen.has(k)) return;
+        const p = this._personProfileByKey(k);
+        if (!p || p.isStory || p.isRelic) return;
+        seen.add(k);
+        keys.push(k);
+      };
+      for (const k of extraKeys || []) add(k);
+      const blob = String(text || '');
+      if (!blob) return keys;
+      const isEn = this.locale === 'en';
+      for (const p of HistoricalAtlasController.PERSON_PROFILES) {
+        if (!p || p.isStory || p.isRelic) continue;
+        const term = isEn ? p.en : p.zh;
+        if (term && term.length >= 2 && blob.includes(term)) add(p.key);
+      }
+      return keys;
+    }
+
+    _linkPersonNamesInText(text, extraKeys) {
+      const raw = String(text || '');
+      if (!raw) return '';
+      const keys = this._collectPersonKeysForText(raw, extraKeys);
+      if (!keys.length) return escHtml(raw);
+      const isEn = this.locale === 'en';
+      const tagged = new Set(extraKeys || []);
+      const needles = [];
+      for (const k of keys) {
+        const p = this._personProfileByKey(k);
+        if (!p) continue;
+        for (const term of this._personNameTerms(p, isEn, tagged.has(k))) {
+          if (raw.includes(term)) needles.push({ term, key: k });
+        }
+      }
+      needles.sort((a, b) => b.term.length - a.term.length || a.key.localeCompare(b.key));
+      const taken = new Array(raw.length).fill(false);
+      const hits = [];
+      for (const n of needles) {
+        let from = 0;
+        while (from <= raw.length - n.term.length) {
+          const at = raw.indexOf(n.term, from);
+          if (at < 0) break;
+          let overlap = false;
+          for (let i = 0; i < n.term.length; i++) {
+            if (taken[at + i]) {
+              overlap = true;
+              break;
+            }
+          }
+          if (!overlap) {
+            for (let i = 0; i < n.term.length; i++) taken[at + i] = true;
+            hits.push({ at, end: at + n.term.length, key: n.key, term: n.term });
+          }
+          from = at + n.term.length;
+        }
+      }
+      hits.sort((a, b) => a.at - b.at);
+      let html = '';
+      let cursor = 0;
+      const title = isEn ? 'Open person chronicle' : '点击查看此人生平';
+      for (const h of hits) {
+        if (h.at > cursor) html += escHtml(raw.slice(cursor, h.at));
+        html += `<button type="button" class="story-inline-person" data-actor-key="${escHtml(
+          h.key
+        )}" title="${title}">${escHtml(h.term)}</button>`;
+        cursor = h.end;
+      }
+      if (cursor < raw.length) html += escHtml(raw.slice(cursor));
+      return html;
+    }
+
+    _bindPersonNameLinks(root) {
+      if (!root || typeof root.querySelectorAll !== 'function') return;
+      root.querySelectorAll('.story-inline-person').forEach((btn) => {
+        if (btn._personLinkBound) return;
+        btn._personLinkBound = true;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const aKey = btn.dataset.actorKey;
+          if (aKey) this.openPersonChronicle(aKey, -1);
+        });
+      });
+    }
+
+    _polityFigureProfiles(desc) {
+      if (!desc) return [];
+      const profiles = HistoricalAtlasController.PERSON_PROFILES;
+      const byKey = new Map(profiles.map((p) => [p.key, p]));
+      const out = [];
+      const seen = new Set();
+      const add = (k) => {
+        const p = byKey.get(k);
+        if (!p || p.isStory || p.isRelic || seen.has(p.key)) return;
+        seen.add(p.key);
+        out.push(p);
+      };
+      if (Array.isArray(desc.figures) && desc.figures.length) {
+        for (const k of desc.figures) add(k);
+        return out.slice(0, 16);
+      }
+      const windowFn = typeof this._polityWindow === 'function' ? this._polityWindow.bind(this) : null;
+      const [mf, mt] = windowFn ? windowFn(desc) : [desc.from, desc.to];
+      const blob = `${desc.zh || ''} ${desc.rulersZh || ''} ${desc.summaryZh || ''} ${(desc.keywords || []).join(
+        ' '
+      )}`;
+      for (const p of profiles) {
+        if (!p || p.isStory || p.isRelic) continue;
+        const span = p.span || [];
+        if (span.length === 2 && (span[1] < mf - 25 || span[0] > mt + 25)) continue;
+        const names = [p.zh, ...(p.aliases || [])].filter(
+          (s) => s && /[一-鿿]/.test(s) && s.length >= 2
+        );
+        if (names.some((n) => blob.includes(n))) add(p.key);
+      }
+      out.sort((a, b) => (a.span && a.span[0] !== undefined ? a.span[0] : 0) - (b.span && b.span[0] !== undefined ? b.span[0] : 0));
+      return out.slice(0, 16);
+    }
+
     _personSearchAliases(p) {
       const out = [p.key, ...(p.aliases || [])].filter(Boolean);
       if (p.courtesyEn) {
@@ -2282,10 +2460,7 @@
               : isEn
                 ? 'Biography'
                 : '人物小传';
-          const descText =
-            profile.isRelic || profile.isStory
-              ? (isEn ? profile.descEn : profile.descZh) || ''
-              : '';
+          const descText = (isEn ? profile.descEn : profile.descZh) || '';
 
           if (subTitle || descText) {
             let campLegendHtml = '';
@@ -2302,7 +2477,7 @@
             }
             loreEl.innerHTML =
               `<div class="pass-lore-head"><span class="pass-lore-badge">${badgeLabel}</span><span class="pass-lore-range">${subTitle}</span></div>` +
-              (descText ? `<div class="pass-lore-desc">${descText}</div>` : '') +
+              (descText ? `<div class="pass-lore-desc">${escHtml(descText)}</div>` : '') +
               campLegendHtml;
             loreEl.classList.remove('is-hidden');
           } else {
@@ -2937,6 +3112,7 @@
             year: m.year,
             text: this.milestoneHeadline(d, m),
             milestone: m,
+            persons: Array.isArray(m.persons) ? m.persons.slice() : [],
           });
         }
       }
@@ -2961,7 +3137,9 @@
                 site: `${st.ancientZh}（今${st.modernZh}）`,
                 siteEn: `${st.ancientEn} (${st.modernEn})`,
                 coord: st.coord,
+                persons: Array.isArray(st.persons) ? st.persons.slice() : j.key ? [j.key] : [],
               },
+              persons: Array.isArray(st.persons) ? st.persons.slice() : j.key ? [j.key] : [],
             });
           }
         });
@@ -2999,8 +3177,10 @@
                 site: lm.site,
                 siteEn: lm.siteEn,
                 coord: lm.coord,
+                persons: Array.isArray(lm.persons) ? lm.persons.slice() : [],
               },
               fromLandmark: true,
+              persons: Array.isArray(lm.persons) ? lm.persons.slice() : [],
             });
           }
         }
@@ -3899,7 +4079,10 @@
                   this.locale === 'en'
                     ? this.formatYear(ev.year)
                     : `${ev.year <= 0 ? '前' + -ev.year : ev.year}年`;
-                return `<div class="t-ev-row" data-ev-idx="${evIdx}"><span class="t-ev-yr">▸ ${yrLabel}</span><span class="t-ev-txt">${ev.text}</span></div>`;
+                return `<div class="t-ev-row" data-ev-idx="${evIdx}"><span class="t-ev-yr">▸ ${yrLabel}</span><span class="t-ev-txt">${this._linkPersonNamesInText(
+                  ev.text,
+                  this._eventPersonKeys(ev)
+                )}</span></div>`;
               })
               .join('');
             eventsHtml = `<div class="t-events">${evItems}</div>`;
@@ -3912,6 +4095,7 @@
             }${eventsHtml}</span>`;
 
           li.querySelectorAll('.t-ev-row').forEach((rowEl) => {
+            this._bindPersonNameLinks(rowEl);
             rowEl.addEventListener('click', (e) => {
               e.stopPropagation();
               const ev = placeEvents[Number(rowEl.dataset.evIdx)];

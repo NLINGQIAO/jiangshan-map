@@ -1369,6 +1369,11 @@ async function runSearchRuntimeSuite(ctx) {
           assert.strictEqual(polEls.get('dynasty-title').textContent, '南唐');
           assert(polEls.get('dynasty-summary').textContent.includes('李煜'), 'Pane summary must show the curated Southern Tang history');
           assert(polEls.get('polity-extra').innerHTML.includes('烈祖李昪'), 'Pane must list Southern Tang rulers');
+          assert(
+            polEls.get('polity-extra').innerHTML.includes('polity-figure-chip') &&
+              polEls.get('polity-extra').innerHTML.includes('李煜'),
+            'Pane must list Southern Tang figures as clickable chips'
+          );
           assert(polEls.get('milestone-list').children.length >= 5, 'Pane must list Southern Tang related events');
           assert.strictEqual(polEls.get('txt-milestones-heading').textContent, '相关大事');
           ctrl.jumpToYear(970);

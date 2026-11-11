@@ -146,3 +146,8 @@ The isolated build tool pins `pinyin-pro`; the browser loads the generated index
      3. **Two-Camp Sandtable & Cross-Dynasty Stops (`js/lore_detail.js`)**: Define `"camps"` (two contrasting faction palettes) and chronological `"stops"` in `PERSON_EVENTS`. For cross-dynasty storylines, set `"dynastyKey"` on each stop and `"isMapChange": true` on territorial transitions; when a converging prong in `"prongs"` originates from an earlier stop, set `"fromStopIdx"` so it reuses that stop's numbered bead rather than spawning a duplicate origin dot.
      4. **Pinyin Index Sync**: Run `node scripts/gen_pinyin.js` to update `js/event_pinyin.js`.
      5. **Primary Source Reference (`data/sources/persons.json`)**: Add a verified primary-source reference for `person:<key>`.
+6. **Person bios, clickable event names, and polity figures**:
+   - Keep the short search card in `PERSON_PROFILES` (`js/lore_core.js`). Do **not** put long bios, `tokens`, or `stops` there (first-paint budget + CI).
+   - Put `tokens` and `descZh` / `descEn` in `PERSON_DETAILS` (`js/lore_detail.js`). The biography (about 40–80 characters) appears at the top of Person Chronicle.
+   - Tag `milestones[].persons` and `PLACE_LANDMARK_EVENTS[].persons` with person keys; chronicle rows, event balloons, and Trace Place then turn those names into buttons.
+   - Polity cards read `POLITY_SUMMARIES[polityKey].figures` (keys of people who *belong* to that regime, not the generals who destroyed it). If `figures` is omitted, the UI falls back to names found in the ruler line and summary.

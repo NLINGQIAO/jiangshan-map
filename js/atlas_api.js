@@ -1289,6 +1289,12 @@
                 en: personProfile.en,
                 courtesyZh: this._zh(personProfile.courtesyZh || ''),
                 courtesyEn: personProfile.courtesyEn || '',
+                ...(personProfile.descZh || personProfile.descEn
+                  ? {
+                      descZh: this._zh(personProfile.descZh || ''),
+                      descEn: personProfile.descEn || '',
+                    }
+                  : {}),
                 span: personProfile.span,
                 stop: stopIdx,
                 totalEvents: personEvents.length,

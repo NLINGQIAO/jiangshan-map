@@ -3864,6 +3864,35 @@ html[lang="en"] .genealogy-list li {
   font-weight: 600;
 }
 
+.polity-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.polity-figure-chip {
+  border: 1px solid color-mix(in srgb, var(--vermilion, #b5452f) 28%, var(--hairline));
+  background: color-mix(in srgb, var(--vermilion, #b5452f) 7%, rgba(255, 255, 255, 0.7));
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-family: var(--serif-stack);
+  font-size: 12px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+
+.polity-figure-chip:hover {
+  background: color-mix(in srgb, var(--vermilion, #b5452f) 16%, #fff);
+  border-color: var(--vermilion, #b5452f);
+  color: var(--vermilion, #9e2a2b);
+}
+
+#milestone-list .story-inline-person,
+.t-ev-txt .story-inline-person,
+.ep-text .story-inline-person {
+  font-size: inherit;
+}
+
 #milestone-list li.polity-empty {
   cursor: default;
   color: var(--text-secondary);
