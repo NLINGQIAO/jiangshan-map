@@ -72,6 +72,11 @@
     { method: 'openPersonChronicle', state: personState, name: personName, skipOnReturn: true },
     { method: 'openGenealogyAt', state: traceState, name: () => 'place_card' },
     { method: 'openPolity', state: polityState, name: polityName },
+    {
+      method: 'openPolityDossier',
+      state: (app) => (app.activePolityDossier && app.activePolityDossier.title) || '',
+      name: (app) => slug('dossier:' + ((app.activePolityDossier && app.activePolityDossier.title) || 'realm')),
+    },
     { method: '_setScrubberView', state: timelineState, name: () => 'timeline_zoom' },
     {
       method: '_finishChallenge',

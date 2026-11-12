@@ -430,6 +430,9 @@
       this.activePerson = null;
       this.activePersonEventIdx = -1;
       this.activeReturnPerson = null;
+      this.activePolity = null;
+      this.activePolityDossier = null;
+      this.eraFocus = null;
       this.personTimer = null;
       this._lastPersonPinZoom = 0;
       this.activeMilestone = null;
@@ -721,6 +724,35 @@
         });
       }
       return this._quizPromise;
+    }
+
+    _ensureDossier() {
+      if (typeof this._renderPolityDossier === 'function') return Promise.resolve(true);
+      return (this._dossierPromise ||= this._loadScriptOnce(
+        this._lazyAssetUrl('js/atlas_dossier.js', 'vDossier')
+      ).then(() => typeof this._renderPolityDossier === 'function' || ((this._dossierPromise = null), false)));
+    }
+
+    openPolityDossier(title, opts = {}) {
+      const go = () => this._openPolityDossierReady?.(title, opts);
+      return this._openPolityDossierReady ? go() : this._ensureDossier().then(go);
+    }
+
+    closePolityDossier() {
+      this.activePolityDossier = null;
+      this._id('polity-dossier')?.classList.add('is-hidden');
+      this._id('viewport-frame')?.classList.remove('has-polity-dossier');
+      if (!this.activePolity) this._setPolityFocus(null);
+      this._lastLegendKey = null;
+      if (this.lastRenderedSnap) this._renderLegendBox(this.lastRenderedSnap);
+    }
+
+    _syncPolityDossier() {
+      if (this.activePolityDossier) {
+        this._syncPolityDossierReady
+          ? this._syncPolityDossierReady()
+          : this._ensureDossier().then(() => this._syncPolityDossierReady?.());
+      }
     }
 
     _openChallenge(opts = {}) {
@@ -4715,6 +4747,8 @@
       if (!targetTitle && this.activePolity) {
         const pol = this._polityPolsInSnap(this.activePolity, this.lastRenderedSnap)[0];
         if (pol) targetTitle = pol.title;
+      } else if (!targetTitle && this.activePolityDossier) {
+        targetTitle = this.activePolityDossier.title;
       } else if (!targetTitle && this.eraFocus) {
         targetTitle = this._eraFocusTitle();
       }
@@ -5131,6 +5165,7 @@
     }
 
     openPolity(title, opts = {}) {
+      this.closePolityDossier();
       this._scheduleUrlSync();
       const desc = this._resolvePolity(title, this.year);
       const cur = this.dynasties[this.dynastyIdx];
@@ -5577,7 +5612,7 @@
         chkCorr ? 1 : 0
       }:${this.activeCorridorMask || ''}:${zhengHeWindow}:${
         this.activePolity ? this.activePolity.key : ''
-      }:${this._eraFocusTitle() || ''}`;
+      }:${this.activePolityDossier ? this.activePolityDossier.title : ''}:${this._eraFocusTitle() || ''}`;
       if (
         this._lastLegendSnap === snap &&
         this._lastLegendKey === legendKey &&
@@ -5673,30 +5708,33 @@
       const core = (snap.polities || []).filter((p) => p.role !== 'neighbor');
       const hasNeighbors = (snap.polities || []).some((p) => p.role === 'neighbor');
       const eraFocusTitle = this.activePolity ? null : this._eraFocusTitle();
-      const curDynForKey = this.dynasties[this.dynastyIdx];
       for (const p of core) {
         const entry = document.createElement('span');
-        const isEraMain = this._isEraMainPolity(p.title, curDynForKey);
         const isEraFocused = eraFocusTitle === p.title;
+        const isDossier = Boolean(
+          this.activePolityDossier && this.activePolityDossier.title === p.title
+        );
         const isActive =
-          isEraFocused || Boolean(this.activePolity && this.activePolity.titles.includes(p.title));
+          isEraFocused ||
+          isDossier ||
+          Boolean(this.activePolity && this.activePolity.titles.includes(p.title));
         entry.className = `key-entry is-interactive${isActive ? ' is-active' : ''}`;
         const en = this.locale === 'en';
         entry.title = isEraFocused
           ? en
             ? 'Click to clear the focus'
             : '点击取消聚焦'
-          : isActive
+          : isDossier
             ? en
-              ? 'Click to return to the era overview'
-              : '点击返回时代全景'
-            : isEraMain
+              ? 'Click to close the realm dossier'
+              : '点击关闭政权档案'
+            : isActive
               ? en
-                ? 'Hover to highlight · Click to focus this era\'s realm'
-                : '悬停高亮疆域 · 点击聚焦本朝疆域'
+                ? 'Click to return to the era overview'
+                : '点击返回时代全景'
               : en
-                ? 'Hover to highlight · Click for this regime\'s profile'
-                : '悬停高亮疆域 · 点击查看该政权档案';
+                ? 'Hover to highlight · Click for this regime\'s dossier'
+                : '悬停高亮疆域 · 点击打开政权档案';
         const sw = document.createElement('i');
         sw.className = 'swatch';
         sw.style.color = p.tint;
@@ -5709,8 +5747,11 @@
         });
         entry.addEventListener('click', () => {
           if (isEraFocused) this.clearEraFocus();
-          else if (isActive) this.closePolity();
-          else this.openPolity(p.title);
+          else if (this.activePolityDossier && this.activePolityDossier.title === p.title) {
+            this.closePolityDossier();
+          } else {
+            this.openPolityDossier(p.title);
+          }
         });
         entry.setAttribute('role', 'button');
         entry.setAttribute('tabindex', '0');
@@ -6823,6 +6864,7 @@
           preserveScroll,
         });
       }
+      if (this.activePolityDossier) this._syncPolityDossier();
       if (
         this.narrating &&
         (this.playing || this.personTimer) &&
@@ -9078,6 +9120,10 @@
         this.closeMilestoneBalloon();
         return true;
       }
+      if (this.activePolityDossier) {
+        this.closePolityDossier();
+        return true;
+      }
       if (this.activePolity) {
         this.closePolity();
         return true;
@@ -9540,6 +9586,24 @@
       if (expandGenBtn) {
         expandGenBtn.addEventListener('click', () => {
           this.toggleGenealogySheetExpand();
+        });
+      }
+      const closeDossierBtn = this._id('act-close-polity-dossier');
+      if (closeDossierBtn) {
+        closeDossierBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.closePolityDossier();
+        });
+      }
+      const dossierChronBtn = this._id('act-polity-dossier-chronicle');
+      if (dossierChronBtn) {
+        dossierChronBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const st = this.activePolityDossier;
+          if (!st || !st.title) return;
+          const title = st.title;
+          this.closePolityDossier();
+          this.openPolity(title);
         });
       }
       this._id('act-close-genealogy').addEventListener('click', () => {

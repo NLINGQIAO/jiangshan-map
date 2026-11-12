@@ -594,6 +594,7 @@ h2 {
 #viewport-frame.is-camera-moving .search-results-list,
 #viewport-frame.is-camera-moving #milestone-balloon,
 #viewport-frame.is-camera-moving #genealogy-card,
+#viewport-frame.is-camera-moving #polity-dossier,
 #viewport-frame.is-camera-moving #challenge-card,
 #viewport-frame.is-camera-moving #journey-card,
 #viewport-frame.is-camera-moving .canvas-reset-btn {
@@ -1913,6 +1914,233 @@ h2 {
   box-shadow: var(--card-shadow);
   backdrop-filter: blur(6px);
   max-width: 338px;
+}
+
+#polity-dossier {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  width: min(352px, calc(100% - 28px));
+  max-height: min(72%, 560px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 12px;
+  background: linear-gradient(180deg, rgba(252, 247, 236, 0.97) 0%, rgba(243, 236, 220, 0.96) 100%);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow), 0 18px 40px rgba(62, 42, 24, 0.12);
+  backdrop-filter: blur(10px);
+  z-index: 12;
+  overflow: hidden;
+}
+
+#polity-dossier.is-hidden {
+  display: none;
+}
+
+#viewport-frame.has-polity-dossier #map-key {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.pd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pd-kicker {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  color: var(--vermilion);
+  font-family: var(--serif-stack);
+}
+
+.pd-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pd-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1.5px solid currentColor;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+#polity-dossier-title {
+  margin: 0;
+  font-family: var(--serif-stack);
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--text-main);
+  min-width: 0;
+}
+
+.pd-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.pd-ruler {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(181, 69, 47, 0.07);
+  border: 1px solid color-mix(in srgb, var(--vermilion) 22%, transparent);
+  border-radius: 8px;
+}
+
+.pd-ruler:empty {
+  display: none;
+}
+
+.pd-ruler-tag {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--vermilion);
+  margin-top: 3px;
+}
+
+.pd-ruler-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-family: var(--serif-stack);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.pd-ruler-era {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.pd-summary {
+  font-size: 12.4px;
+  line-height: 1.62;
+  color: var(--text-main);
+  max-height: 7.6em;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.pd-summary.is-hidden {
+  display: none;
+}
+
+.pd-figures {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pd-figures.is-hidden {
+  display: none;
+}
+
+.pd-fig-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pd-fig-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+}
+
+.pd-fig-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.pd-figure {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: rgba(255, 255, 255, 0.62);
+  border-radius: 8px;
+  padding: 6px 8px 5px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
+}
+
+.pd-figure:hover,
+.pd-figure:focus-visible {
+  border-color: var(--vermilion);
+  background: #fff;
+  outline: none;
+}
+
+.pd-figure.is-living {
+  border-color: color-mix(in srgb, var(--vermilion) 40%, var(--hairline));
+  background: color-mix(in srgb, var(--vermilion) 8%, #fff);
+}
+
+.pd-figure-name {
+  font-family: var(--serif-stack);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-figure-role {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-chronicle-btn {
+  appearance: none;
+  align-self: stretch;
+  border: 1px dashed color-mix(in srgb, var(--vermilion) 35%, var(--hairline));
+  background: transparent;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--serif-stack);
+  font-size: 12.5px;
+  color: var(--vermilion);
+  cursor: pointer;
+}
+
+.pd-chronicle-btn:hover {
+  background: rgba(181, 69, 47, 0.08);
+}
+
+.pd-figure:hover .pd-figure-name {
+  color: var(--vermilion);
 }
 
 .key-phase-bar {
@@ -3475,6 +3703,21 @@ html[lang="en"] .genealogy-list li {
     max-height: min(62%, 430px);
     padding: 7px 10px 8px;
     z-index: 14;
+  }
+  #polity-dossier {
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    width: auto;
+    max-height: min(70%, 520px);
+    padding: 10px 12px;
+    z-index: 13;
+  }
+  #polity-dossier-title {
+    font-size: 22px;
+  }
+  .pd-fig-grid {
+    grid-template-columns: 1fr 1fr;
   }
   #genealogy-card.is-sheet-expanded {
     top: 6px;
@@ -5673,6 +5916,13 @@ html.is-embed #map-key {
 
 /* Leave room under the open-link chip for the place / person card. All four edges are set because
    the <=900px layout turns the card into a full-width bottom sheet, and embeds are often that narrow. */
+html.is-embed #polity-dossier {
+  left: 12px;
+  bottom: 12px;
+  width: min(320px, calc(100% - 24px));
+  z-index: 31;
+}
+
 html.is-embed #genealogy-card,
 html.is-embed #genealogy-card.is-sheet-expanded {
   top: 52px;

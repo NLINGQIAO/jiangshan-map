@@ -151,3 +151,4 @@ The isolated build tool pins `pinyin-pro`; the browser loads the generated index
    - Put `tokens` and `descZh` / `descEn` in `PERSON_DETAILS` (`js/lore_detail.js`). The biography (about 40–80 characters) appears at the top of Person Chronicle.
    - Tag `milestones[].persons` and `PLACE_LANDMARK_EVENTS[].persons` with person keys; chronicle rows, event balloons, and Trace Place then turn those names into buttons.
    - Polity cards read `POLITY_SUMMARIES[polityKey].figures` (keys of people who *belong* to that regime, not the generals who destroyed it). If `figures` is omitted, the UI falls back to names found in the ruler line and summary.
+   - Clicking a legend swatch opens the on-map **Realm Dossier** (`#polity-dossier`): current ruler plus living / past figures. Names open Person Chronicle. Search / `?polity=` still uses the chronicle-pane profile.

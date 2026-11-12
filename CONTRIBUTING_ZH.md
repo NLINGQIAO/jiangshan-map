@@ -151,3 +151,4 @@ npm test --prefix scripts/search-pinyin
    - 匹配词与小传写在 `js/lore_detail.js` 的 `PERSON_DETAILS[key]`：`tokens` 用于从编年标题抽取行迹；`descZh` / `descEn` 为点开姓名后顶部「人物小传」（各约 40–80 字，勿摘抄史籍原文）。
    - 编年 `milestones[].persons` 与地点大事 `PLACE_LANDMARK_EVENTS[].persons` 填人物 `key` 后，编年列表、事件浮签与点地溯源会把正文里的姓名渲成可点按钮。
    - 政权卡的「人物」来自 `POLITY_SUMMARIES[polityKey].figures`（人物 `key` 数组，只列该政权自己的人，不要把灭国主将算进去）。无 `figures` 时，界面会从帝系/提要里的姓名做有限回退。
+   - 左下角图例点击打开地图上的「政权档案」浮层（`#polity-dossier`）：当年首脑（年号表 / 并立纪年）+ 在世与历世人物。点姓名进入点人溯事。本朝主政权若无 `figures`，回退为该 `dynastyKey` 下生卒覆盖当前年的人物。搜索 / `?polity=` 仍走右侧史志里的完整政权卡。

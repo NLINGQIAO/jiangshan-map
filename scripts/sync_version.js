@@ -26,6 +26,7 @@ const CONTROLLER_SCRIPTS = [
   'js/atlas_api.js',
   'js/atlas_quiz.js',
   'js/atlas_narrator.js',
+  'js/atlas_dossier.js',
 ];
 
 const SYNC_CONTROLLER_SCRIPTS = [
@@ -53,6 +54,7 @@ const LAZY_ATTR_ASSETS = [
   { attr: 'data-v-hant', datasetKey: 'vHant', relPath: 'js/zh_hant.js' },
   { attr: 'data-v-quiz', datasetKey: 'vQuiz', relPath: 'js/atlas_quiz.js' },
   { attr: 'data-v-narrator', datasetKey: 'vNarrator', relPath: 'js/atlas_narrator.js' },
+  { attr: 'data-v-dossier', datasetKey: 'vDossier', relPath: 'js/atlas_dossier.js' },
 ];
 
 function shortSha256(filePath) {

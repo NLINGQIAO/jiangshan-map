@@ -1786,6 +1786,30 @@ async function runTraceGenealogySuite(ctx) {
         shuFigs.includes('zhugeliang') && shuFigs.includes('liubei'),
         `Shu Han figures should list Liu Bei & Zhuge Liang, got ${JSON.stringify(shuFigs)}`
       );
+
+      ctrl.year = 1037;
+      ctrl.dynastyIdx = ctrl._findDynastyIndex(1037);
+      const songDesc = ctrl._resolvePolity('宋', 1037);
+      const songRuler = ctrl._polityCurrentRuler(songDesc, '宋');
+      assert(
+        songRuler && /仁宗/.test(songRuler.monarchZh),
+        `Song dossier in 1037 must name Emperor Renzong, got ${JSON.stringify(songRuler && songRuler.monarchZh)}`
+      );
+      const songFigs = ctrl._polityDossierFigures(songDesc, '宋').map((p) => p.key);
+      assert(
+        songFigs.includes('sushi') && songFigs.includes('fanzhongyan'),
+        `Northern Song dossier must list living literati, got ${JSON.stringify(songFigs)}`
+      );
+      ctrl.year = 221;
+      ctrl.dynastyIdx = ctrl._findDynastyIndex(221);
+      const shuRuler = ctrl._polityCurrentRuler(
+        loreData.POLITY_PROFILES.find((p) => p.key === 'shuhan'),
+        '蜀汉'
+      );
+      assert(
+        shuRuler && /昭烈/.test(shuRuler.monarchZh),
+        `Shu Han regional era track must supply a ruler, got ${JSON.stringify(shuRuler && shuRuler.monarchZh)}`
+      );
     }
   }
 

@@ -991,11 +991,13 @@ async function runCoreDataSuite(ctx) {
         !perfReport.syncScripts.some((s) => s.relPath === 'js/zh_hant.js') &&
         !perfReport.syncScripts.some((s) => s.relPath === 'js/atlas_quiz.js') &&
         !perfReport.syncScripts.some((s) => s.relPath === 'js/atlas_narrator.js') &&
+        !perfReport.syncScripts.some((s) => s.relPath === 'js/atlas_dossier.js') &&
         perfReport.lazyScripts.some((s) => s.relPath === 'js/lore_detail.js') &&
         perfReport.lazyScripts.some((s) => s.relPath === 'js/zh_hant.js') &&
         perfReport.lazyScripts.some((s) => s.relPath === 'js/atlas_quiz.js') &&
-        perfReport.lazyScripts.some((s) => s.relPath === 'js/atlas_narrator.js'),
-      'index.html must load js/lore_core.js synchronously and defer js/lore_detail.js, js/zh_hant.js, js/atlas_quiz.js, and js/atlas_narrator.js as lazy bundles'
+        perfReport.lazyScripts.some((s) => s.relPath === 'js/atlas_narrator.js') &&
+        perfReport.lazyScripts.some((s) => s.relPath === 'js/atlas_dossier.js'),
+      'index.html must load js/lore_core.js synchronously and defer js/lore_detail.js, js/zh_hant.js, js/atlas_quiz.js, js/atlas_narrator.js, and js/atlas_dossier.js as lazy bundles'
     );
   }
 
